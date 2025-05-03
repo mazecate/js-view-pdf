@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF Page Viewer</title>
+  <!-- Include PDF.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <!-- Include CSS for the viewer -->
+  <link rel="stylesheet" type="text/css" href="path-to-your-css-file">
+</head>
+<body>
+  <h2>Upload PDF and View File</h2>
+  <form>
+    <input type="file" id="pdfFile" accept=".pdf" required><br>
+    <input type="button" value="View PDF" onclick="viewPDF()">
+  </form>
+  <div id="pdfViewer"></div>
+  <button onclick="previousPage()">Previous</button>
+  <button onclick="nextPage()">Next</button>
+
+  <script>
+    var pdf;
+    var currentPage = 1;
+
+    function viewPDF() {
+      var file = document.getElementById('pdfFile').files[0];
+      var fileReader = new FileReader();
+
+      fileReader.onload = function () {
+        var typedarray = new Uint8Array(this.result);
+        pdfjsLib.getDocument(typedarray).promise.then(function (pdfDoc) {
+          pdf = pdfDoc;
+          displayPage(currentPage);
+        });
+      };
+
+      fileReader.readAsArrayBuffer(file);
+    }
+
+    function displayPage(pageNumber) {
+      currentPage = pageNumber;
+      pdf.getPage(pageNumber).then(function (page) {
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+        var viewport = page.getViewport({ scale: 1 });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        page.render({
+          canvasContext: context,
+          viewport: viewport
+        });
+
+        var pdfViewer = document.getElementById('pdfViewer');
+        pdfViewer.innerHTML = '';
+        pdfViewer.appendChild(canvas);
+      });
+    }
+
+    function previousPage() {
+      if (currentPage > 1) {
+        displayPage(currentPage - 1);
+      }
+    }
+
+    function nextPage() {
+      if (currentPage < pdf.numPages) {
+        displayPage(currentPage + 1);
+      }
+    }
+  </script>
+</body>
+</html>
